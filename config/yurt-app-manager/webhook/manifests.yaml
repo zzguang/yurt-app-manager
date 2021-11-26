@@ -87,3 +87,22 @@ webhooks:
     - UPDATE
     resources:
     - uniteddeployments
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-apps-openyurt-io-v1alpha1-nodepoolingress
+  failurePolicy: Fail
+  name: vnodepoolingress.kb.io
+  rules:
+  - apiGroups:
+    - apps.openyurt.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - nodepoolingresses
