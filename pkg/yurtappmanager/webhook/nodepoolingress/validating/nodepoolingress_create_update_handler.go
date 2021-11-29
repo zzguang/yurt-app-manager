@@ -18,12 +18,15 @@ package validating
 
 import (
 	"context"
+	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
+	appsv1alpha1 "github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/apis/apps/v1alpha1"
 	webhookutil "github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/webhook/util"
 )
 
@@ -43,45 +46,49 @@ func (h *NodePoolIngressCreateUpdateHandler) SetOptions(options webhookutil.Opti
 
 // Handle handles admission requests.
 func (h *NodePoolIngressCreateUpdateHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
-	//np_ing := appsv1alpha1.NodePoolIngress{}
+	ingress := appsv1alpha1.NodePoolIngress{}
+
+	// singleton node pool validating
+	if req.Name != appsv1alpha1.SingletonNodePoolIngressInstanceName {
+		var msg = "please name NodePoolIngress with " + appsv1alpha1.SingletonNodePoolIngressInstanceName + " instead of " + req.Name
+		klog.Errorf(msg)
+		return admission.ValidationResponse(false, msg)
+	}
 
 	switch req.AdmissionRequest.Operation {
 	case admissionv1.Create:
-		/*		klog.V(4).Info("capture the nodepool creation request")
-				err := h.Decoder.Decode(req, &np)
-				if err != nil {
-					return admission.Errored(http.StatusBadRequest, err)
-				}
-				if allErrs := validateNodePoolSpec(&np.Spec); len(allErrs) > 0 {
-					return admission.Errored(http.StatusUnprocessableEntity,
-						allErrs.ToAggregate())
-				}*/
-	case admissionv1.Update:
-		/*		klog.V(4).Info("capture the nodepool update request")
-				err := h.Decoder.Decode(req, &np)
-				if err != nil {
-					return admission.Errored(http.StatusBadRequest, err)
-				}
-				onp := appsv1alpha1.NodePool{}
-				err = h.Decoder.DecodeRaw(req.OldObject, &onp)
-				if err != nil {
-					return admission.Errored(http.StatusBadRequest, err)
-				}
+		klog.V(4).Info("capture the nodepoolingress creation request")
 
-				if allErrs := validateNodePoolSpecUpdate(&np.Spec, &onp.Spec); len(allErrs) > 0 {
-					return admission.Errored(http.StatusUnprocessableEntity,
-						allErrs.ToAggregate())
-				}*/
+		if err := h.Decoder.Decode(req, &ingress); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		if allErrs := validateNodePoolIngressSpec(h.Client, &ingress.Spec); len(allErrs) > 0 {
+			return admission.Errored(http.StatusUnprocessableEntity,
+				allErrs.ToAggregate())
+		}
+	case admissionv1.Update:
+		klog.V(4).Info("capture the nodepoolingress update request")
+		if err := h.Decoder.Decode(req, &ingress); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		oingress := appsv1alpha1.NodePoolIngress{}
+		if err := h.Decoder.DecodeRaw(req.OldObject, &oingress); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+		if allErrs := validateNodePoolIngressSpecUpdate(h.Client, &ingress.Spec, &oingress.Spec); len(allErrs) > 0 {
+			return admission.Errored(http.StatusUnprocessableEntity,
+				allErrs.ToAggregate())
+		}
 	case admissionv1.Delete:
-		/*		klog.V(4).Info("capture the nodepool deletion request")
-				err := h.Decoder.DecodeRaw(req.OldObject, &np)
-				if err != nil {
-					return admission.Errored(http.StatusBadRequest, err)
-				}
-				if allErrs := validateNodePoolDeletion(h.Client, &np); len(allErrs) > 0 {
-					return admission.Errored(http.StatusUnprocessableEntity,
-						allErrs.ToAggregate())
-				}*/
+		klog.V(4).Info("capture the nodepoolingress deletion request")
+		if err := h.Decoder.DecodeRaw(req.OldObject, &ingress); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		if allErrs := validateNodePoolIngressDeletion(h.Client, &ingress.Spec); len(allErrs) > 0 {
+			return admission.Errored(http.StatusUnprocessableEntity,
+				allErrs.ToAggregate())
+		}
 	}
 
 	return admission.ValidationResponse(true, "")
