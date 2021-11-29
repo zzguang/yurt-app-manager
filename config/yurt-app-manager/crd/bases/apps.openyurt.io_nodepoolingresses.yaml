@@ -8,27 +8,37 @@ metadata:
   creationTimestamp: null
   name: nodepoolingresses.apps.openyurt.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.replicas
-    description: The replicas of nginx ingress controller per nodepool
-    name: Replicas
-    type: integer
-  - JSONPath: .spec.version
-    description: The version of upstream nginx ingress controller
-    name: Version
-    type: string
   group: apps.openyurt.io
   names:
     kind: NodePoolIngress
     listKind: NodePoolIngressList
     plural: nodepoolingresses
     shortNames:
-      - nping
+    - nping
     singular: nodepoolingress
   scope: Namespaced
-  subresources:
-    status: {}
-  validation:
+  versions:
+  - additionalPrinterColumns:
+    - description: The number of pools on which ingress is enabled
+      jsonPath: .status.readyPoolNum
+      name: ReadyPools
+      type: integer
+    - description: The number of pools on which ingress is enabling or enable failed
+      jsonPath: .status.unreadyPoolNum
+      name: NotReadyPools
+      type: integer
+    - description: The ingress controller replicas per pool
+      jsonPath: .status.Replicas
+      name: Replicas-Per-Pool
+      type: integer
+    - description: The ingress controller version
+      jsonPath: .status.Verson
+      name: IngressController-Version
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: NodePoolIngress is the Schema for the nodepoolingresses API
@@ -48,18 +58,13 @@ spec:
           spec:
             description: NodePoolIngressSpec defines the desired state of NodePoolIngress
             properties:
-              nginx_ingress_controller_version:
-                description: Indicates the nginx ingress controller version to be
-                  deployed under all the specified nodepools.
-                type: string
               ingress_controller_replicas_per_pool:
                 description: Indicates the number of the ingress controllers to be
                   deployed under all the specified nodepools.
                 format: int32
                 type: integer
               pools:
-                description: Indicates all the nodepools to enable ingress, personalized
-                  config for each pool are also supported.
+                description: Indicates all the nodepools on which to enable ingress.
                 items:
                   type: string
                 type: array
@@ -67,33 +72,35 @@ spec:
           status:
             description: NodePoolIngressStatus defines the observed state of NodePoolIngress
             properties:
-              nginx_ingress_controller_version:
-                description: Indicates the nginx ingress controller version to be
-                  deployed under all the specified nodepools.
-                type: string
               ingress_controller_replicas_per_pool:
-                description: Indicates the number of the ingress controllers to be
-                  deployed under all the specified nodepools.
+                description: Indicates the number of the ingress controllers deployed
+                  under all the specified nodepools.
                 format: int32
                 type: integer
+              nginx_ingress_controller_version:
+                description: Indicates the nginx ingress controller version deployed
+                  under all the specified nodepools.
+                type: string
               pools:
-                description: Indicates all the nodepools to enable ingress, personalized
-                  config for each pool are also supported.
+                description: Indicates all the nodepools on which to enable ingress.
                 items:
                   type: string
                 type: array
-              pools_status:
-                description: Indicates all the nodepools ingress status.
-                items: {}
-                type: array
+              readyPoolNum:
+                description: Total number of ready pools on which ingress is enabled.
+                format: int32
+                type: integer
+              unreadyPoolNum:
+                description: Total number of unready pools on which ingress is enabling
+                  or enable failed.
+                format: int32
+                type: integer
             type: object
         type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
     served: true
     storage: true
-
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

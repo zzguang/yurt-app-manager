@@ -206,7 +206,7 @@ func CreateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 	if err != nil {
 		return fmt.Errorf("fail to create the deployment/%s: %v", dply.Name, err)
 	}
-	klog.V(4).Infof("the deployment/%s is created", dply.Name)
+	klog.V(4).Infof("deployment/%s is created", dply.Name)
 	return nil
 }
 
@@ -229,7 +229,7 @@ func DeleteDeployFromYaml(client client.Client, ns, dplyTmpl string, ctx interfa
 	if err != nil {
 		return fmt.Errorf("fail to delete the deployment/%s: %v", dply.Name, err)
 	}
-	klog.V(4).Infof("the deployment/%s is deleted", dply.Name)
+	klog.V(4).Infof("deployment/%s is deleted", dply.Name)
 	return nil
 }
 
@@ -253,7 +253,7 @@ func UpdateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 	if err != nil {
 		return fmt.Errorf("fail to update the deployment/%s: %v", dply.Name, err)
 	}
-	klog.V(4).Infof("the deployment/%s is updated", dply.Name)
+	klog.V(4).Infof("deployment/%s is updated", dply.Name)
 	return nil
 }
 
@@ -390,7 +390,6 @@ func CreateValidatingWebhookConfigurationFromYaml(client client.Client, name, sv
 		return fmt.Errorf("fail to create the validatingwebhookconfiguration/%s: %v", vwc.Name, err)
 	}
 	klog.V(4).Infof("validatingwebhookconfiguration/%s is created", vwc.Name)
-
 	return nil
 }
 
@@ -411,7 +410,6 @@ func DeleteValidatingWebhookConfigurationFromYaml(client client.Client, name, sv
 		return fmt.Errorf("fail to delete the validatingwebhookconfiguration/%s: %s", vwc.Name, err)
 	}
 	klog.V(4).Infof("validatingwebhookconfiguration/%s is deleted", vwc.Name)
-
 	return nil
 }
 
@@ -428,8 +426,7 @@ func CreateJobFromYaml(client client.Client, ns, jobTmpl string) error {
 	job.Namespace = ns
 	err = client.Create(context.Background(), job)
 	if err != nil {
-		klog.V(4).Infof("fail to create the job/%s: %v", job.Name, err)
-		return fmt.Errorf("fail to create the service/%s: %v", job.Name, err)
+		return fmt.Errorf("fail to create the job/%s: %v", job.Name, err)
 	}
 	klog.V(4).Infof("job/%s is created", job.Name)
 	return nil
@@ -448,10 +445,32 @@ func DeleteJobFromYaml(client client.Client, ns, jobTmpl string) error {
 	job.Namespace = ns
 	err = client.Delete(context.Background(), job)
 	if err != nil {
-		klog.V(4).Infof("fail to delete the job/%s: %v", job.Name, err)
-		return fmt.Errorf("fail to delete the service/%s: %v", job.Name, err)
+		return fmt.Errorf("fail to delete the job/%s: %v", job.Name, err)
 	}
 	klog.V(4).Infof("job/%s is deleted", job.Name)
+	return nil
+}
+
+// CreateJobPatchFromYaml creates the Job patch from the yaml template.
+func CreateJobPatchFromYaml(client client.Client, ns, jobTmpl string, ctx interface{}) error {
+	jp, err := SubsituteTemplate(jobTmpl, ctx)
+	if err != nil {
+		return err
+	}
+	jpObj, err := YamlToObject([]byte(jp))
+	if err != nil {
+		return err
+	}
+	job, ok := jpObj.(*batchv1.Job)
+	if !ok {
+		return fmt.Errorf("fail to assert job")
+	}
+	job.Namespace = ns
+	err = client.Create(context.Background(), job)
+	if err != nil {
+		return fmt.Errorf("fail to create the job patch/%s: %v", job.Name, err)
+	}
+	klog.V(4).Infof("job patch/%s is created", job.Name)
 	return nil
 }
 
@@ -465,7 +484,7 @@ func YamlToObject(yamlContent []byte) (k8sruntime.Object, error) {
 	return obj, nil
 }
 
-// SubsituteTemplate fills out the kubeconfig templates based on the context
+// SubsituteTemplate fills out the template based on the context
 func SubsituteTemplate(tmpl string, context interface{}) (string, error) {
 	t, tmplPrsErr := template.New("test").Option("missingkey=zero").Parse(tmpl)
 	if tmplPrsErr != nil {
@@ -475,6 +494,5 @@ func SubsituteTemplate(tmpl string, context interface{}) (string, error) {
 	if err := t.Execute(writer, context); nil != err {
 		return "", err
 	}
-
 	return writer.String(), nil
 }

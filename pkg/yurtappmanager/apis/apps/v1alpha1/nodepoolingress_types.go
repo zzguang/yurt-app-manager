@@ -24,85 +24,57 @@ import (
 const (
 	// DefaultIngressControllerReplicasPerPool defines the default ingress controller replicas per pool
 	DefaultIngressControllerReplicasPerPool int32 = 1
+	// NginxIngressControllerVersion defines the nginx ingress controller version
+	NginxIngressControllerVersion = "0.48.1"
 	// SingletonNodePoolIngressInstanceName defines the singleton instance name of NodePoolIngress
 	SingletonNodePoolIngressInstanceName = "nodepool-ingress"
-	// SingletonNodePoolIngressNameSpace defines the namespace of the singleton NodePoolIngress instance
-	SingletonNodePoolIngressNameSpace = "kube-system"
 	// NodePoolNameSpacePrefix defines the prefix of the nodepool namespace for nginx ingress
 	NodePoolNameSpacePrefix = "nodepool"
 )
 
-// NodePoolIngressConditionType indicates valid conditions type of a NodePoolIngress
-type NodePoolIngressConditionType string
-
-const (
-	// IngressEnabling means ingress is being enabled on some nodepools.
-	IngressEnabling NodePoolIngressConditionType = "IngressEnabling"
-	// IngressEnabled means ingress is enabled successfully on some nodepools.
-	IngressEnabled NodePoolIngressConditionType = "IngressEnabled"
-	// IngressEnableFailed means ingress is enabled failed on some nodepools.
-	IngressEnableFailed NodePoolIngressConditionType = "IngressEnableFailed"
-)
-
-// Topology defines the spread detail of each nodepool under NodePoolIngress
-// A NodePoolIngress CRD manages ingress feature support for multi nodepools
-// Each of the nodepools under the NodePoolIngress is described in Topology.
-/*
-type IngressTopology struct {
-	// Indicates details of each nodepool which will be managed by NodePoolIngress.
-	Pools []IngressPool `json:"pools,omitempty"`
-}
-
-// IngressPool defines the detail of a nodepool
-type IngressPool struct {
-	// Indicates the nodepool name.
-	Name string `json:"name,omitempty"`
-
-	// Indicates the number of the ingress controllers to be created under this nodepool.
-	//Replicas *int32 `json:"ingress_controller_replicas,omitempty"`
-
-	// Indicates the ingress controller external IP to be exposed.
-	//ExternalIP string `json:"ingress_controller_externalIP,omitempty"`
-}*/
-
-// NodePoolStatus defines the observed state of the related nodepoolingress
-type NodePoolIngressCondition struct {
-	// Indicates the nodepoolingress state.
-	Condition NodePoolIngressConditionType `json:"state,omitempty"`
-	// Indicates the related nodepool names
-	Pools []string `json:"pools,omitempty"`
-}
-
 // NodePoolIngressSpec defines the desired state of NodePoolIngress
 type NodePoolIngressSpec struct {
 	// Indicates the number of the ingress controllers to be deployed under all the specified nodepools.
+	// +optional
 	Replicas int32 `json:"ingress_controller_replicas_per_pool,omitempty"`
 
-	// Indicates the nginx ingress controller version to be deployed under all the specified nodepools.
-	//Version string `json:"nginx_ingress_controller_version,omitempty"`
-
 	// Indicates all the nodepools on which to enable ingress.
-	//Topology IngressTopology `json:"topology,omitempty"`
+	// +optional
 	Pools []string `json:"pools,omitempty"`
 }
 
 // NodePoolIngressStatus defines the observed state of NodePoolIngress
 type NodePoolIngressStatus struct {
-	// Indicates the number of the ingress controllers to be deployed under all the specified nodepools.
+	// Indicates the number of the ingress controllers deployed under all the specified nodepools.
+	// +optional
 	Replicas int32 `json:"ingress_controller_replicas_per_pool,omitempty"`
 
-	// Indicates the nginx ingress controller version to be deployed under all the specified nodepools.
-	//Version string `json:"nginx_ingress_controller_version,omitempty"`
-
 	// Indicates all the nodepools on which to enable ingress.
+	// +optional
 	Pools []string `json:"pools,omitempty"`
 
-	// Indicates all the nodepools ingress status.
-	Status []NodePoolIngressCondition `json:"pools_status,omitempty"`
+	// Indicates the nginx ingress controller version deployed under all the specified nodepools.
+	// +optional
+	Version string `json:"nginx_ingress_controller_version,omitempty"`
+
+	// Total number of ready pools on which ingress is enabled.
+	// +optional
+	ReadyPoolNum int32 `json:"readyPoolNum"`
+
+	// Total number of unready pools on which ingress is enabling or enable failed.
+	// +optional
+	UnreadyPoolNum int32 `json:"unreadyPoolNum"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +genclient:nonNamespaced
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=nping
+// +kubebuilder:printcolumn:name="ReadyPools",type="integer",JSONPath=".status.readyPoolNum",description="The number of pools on which ingress is enabled"
+// +kubebuilder:printcolumn:name="NotReadyPools",type="integer",JSONPath=".status.unreadyPoolNum",description="The number of pools on which ingress is enabling or enable failed"
+// +kubebuilder:printcolumn:name="Replicas-Per-Pool",type="integer",JSONPath=".status.Replicas",description="The ingress controller replicas per pool"
+// +kubebuilder:printcolumn:name="IngressController-Version",type="string",JSONPath=".status.Verson",description="The ingress controller version"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // NodePoolIngress is the Schema for the nodepoolingresses API
 type NodePoolIngress struct {

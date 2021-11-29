@@ -47,10 +47,12 @@ var concurrentReconciles = 3
 
 const (
 	controllerName = "nodepoolingress-controller"
-
-	/*eventTypeIngressEnabling     = "IngressEnabling"
-	eventTypeIngressEnabled      = "IngressEnabled"
-	eventTypeIngressEnableFailed = "IngressEnableFailed"*/
+	/*
+		eventTypeIngressEnabling     = "EnablingPools"
+		eventTypeIngressEnabled      = "EnabledPools"
+		eventTypeIngressEnableFailed = "EnableFailedPools"
+		eventTypeIngressEnableFailed = "DeletedPools"
+	*/
 )
 
 // NodePoolIngressReconciler reconciles a NodePoolIngress object
@@ -62,18 +64,18 @@ type NodePoolIngressReconciler struct {
 }
 
 // Add creates a new NodePoolIngress Controller and adds it to the Manager with default RBAC.
-// The Manager will set fields on the Controller and Start it when the Manager is Started.
+// The Manager will set fields on the Controller and start it when the Manager is started.
 func Add(mgr manager.Manager, ctx context.Context) error {
 	if !gate.ResourceEnabled(&appsv1alpha1.NodePoolIngress{}) {
 		return nil
 	}
-
-	/*	inf := ctx.Value(constant.ContextKeyCreateSingletonPoolIngress)
+	/*
+		inf := ctx.Value(constant.ContextKeyCreateSingletonPoolIngress)
 		cdp, ok := inf.(bool)
 		if !ok {
 			return errors.New("fail to assert interface to bool for command line option createSingletonPoolIngress")
-		}*/
-
+		}
+	*/
 	return add(mgr, newReconciler(mgr, true))
 }
 
@@ -95,7 +97,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
-
 	npir, ok := r.(*NodePoolIngressReconciler)
 	if !ok {
 		return errors.New("fail to assert interface to NodePoolIngressReconciler")
@@ -105,7 +106,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
-
 	if npir.createSingletonPoolIngress {
 		go createSingletonPoolIngress(mgr.GetClient())
 	}
@@ -115,16 +115,20 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 //createSingletonPoolIngress creates the singleton NodePoolIngress CR, it will try 5 times if it fails
 func createSingletonPoolIngress(client client.Client) {
 	name := appsv1alpha1.SingletonNodePoolIngressInstanceName
-	namespace := appsv1alpha1.SingletonNodePoolIngressNameSpace
 	replicas := appsv1alpha1.DefaultIngressControllerReplicasPerPool
 	for i := 0; i < 5; i++ {
 		np_ing := appsv1alpha1.NodePoolIngress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
-				Namespace: namespace,
+				Namespace: "kube-system",
 			},
 			Spec: appsv1alpha1.NodePoolIngressSpec{
 				Replicas: replicas,
+				Pools:    nil,
+			},
+			Status: appsv1alpha1.NodePoolIngressStatus{
+				Replicas: replicas,
+				Version:  appsv1alpha1.NginxIngressControllerVersion,
 			},
 		}
 		err := client.Create(context.TODO(), &np_ing)
@@ -172,9 +176,7 @@ func (r *NodePoolIngressReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	desiredNodePoolList := instance.Spec.Pools
 	currentNodePoolList := instance.DeepCopy().Status.Pools
-
 	statusNeedUpdate := false
-
 	addedPools, removedPools, unchangedPools := getPools(desiredNodePoolList, currentNodePoolList)
 
 	if addedPools != nil {
@@ -279,16 +281,16 @@ func DeployNginxIngressController(client client.Client, poolname string, desired
 	}
 	yurtapputil.CreateNginxIngressControllerStaticResource(client, ns)
 	yurtapputil.CreateNginxIngressControllerDeploymment(client, ns, poolname, desiredreplicas)
-	yurtapputil.CreateNginxIngressWebhookStaticResource(client, ns)
-	yurtapputil.CreateNginxIngressControllerWebhookDeploymment(client, ns, poolname, 1)
+	yurtapputil.CreateNginxIngressWebhookAdmissionStaticResource(client, ns)
+	yurtapputil.CreateNginxIngressWebhookAdmissionDeploymment(client, ns, poolname, 1)
 }
 
 func DeleteNginxIngressController(client client.Client, poolname string) {
 	ns := GetPoolNameSpace(poolname)
 	yurtapputil.DeleteNginxIngressControllerStaticResource(client, ns)
 	yurtapputil.DeleteNginxIngressControllerDeploymment(client, ns, poolname)
-	yurtapputil.DeleteNginxIngressWebhookStaticResource(client, ns)
-	yurtapputil.DeleteNginxIngressControllerWebhookDeploymment(client, ns, poolname)
+	yurtapputil.DeleteNginxIngressWebhookAdmissionStaticResource(client, ns)
+	yurtapputil.DeleteNginxIngressWebhookAdmissionDeploymment(client, ns, poolname)
 	DeleteNodePoolNamespace(client, poolname)
 }
 
