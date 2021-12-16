@@ -1,13 +1,13 @@
-# permissions for end users to edit nodepoolingresses.
+# permissions for end users to edit yurtingresses.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: nodepoolingress-editor-role
+  name: yurtingress-editor-role
 rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses
+  - yurtingresses
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses/status
+  - yurtingresses/status
   verbs:
   - get

@@ -125,7 +125,7 @@ rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses
+  - yurtingresses
   verbs:
   - create
   - delete
@@ -137,7 +137,7 @@ rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses/status
+  - yurtingresses/status
   verbs:
   - get
   - patch
@@ -212,3 +212,29 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - ""
+  - batch
+  resources:
+  - namespaces
+  - serviceaccounts
+  - configmaps
+  - services
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - "*"

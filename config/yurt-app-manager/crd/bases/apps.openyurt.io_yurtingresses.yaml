@@ -1,0 +1,112 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.9
+  creationTimestamp: null
+  name: yurtingresses.apps.openyurt.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.nginx_ingress_controller_version
+    description: The nginx ingress controller version
+    name: Nginx-Ingress-Version
+    type: string
+  - JSONPath: .status.ingress_controller_replicas_per_pool
+    description: The nginx ingress controller replicas per pool
+    name: Replicas-Per-Pool
+    type: integer
+  - JSONPath: .status.readyNum
+    description: The number of pools on which ingress is enabled
+    name: ReadyNum
+    type: integer
+  - JSONPath: .status.unreadyNum
+    description: The number of pools on which ingress is enabling or enable failed
+    name: NotReadyNum
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: apps.openyurt.io
+  names:
+    categories:
+    - all
+    kind: YurtIngress
+    listKind: YurtIngressList
+    plural: yurtingresses
+    shortNames:
+    - ying
+    singular: yurtingress
+  scope: Cluster
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: YurtIngress is the Schema for the yurtingresses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: YurtIngressSpec defines the desired state of YurtIngress
+          properties:
+            ingress_controller_replicas_per_pool:
+              description: Indicates the number of the ingress controllers to be
+                deployed under all the specified nodepools.
+              format: int32
+              type: integer
+            pools:
+              description: Indicates all the nodepools on which to enable ingress.
+              items:
+                type: string
+              type: array
+          type: object
+        status:
+          description: YurtIngressStatus defines the observed state of YurtIngress
+          properties:
+            ingress_controller_replicas_per_pool:
+              description: Indicates the number of the ingress controllers deployed
+                under all the specified nodepools.
+              format: int32
+              type: integer
+            nginx_ingress_controller_version:
+              description: Indicates the nginx ingress controller version deployed
+                under all the specified nodepools.
+              type: string
+            pools:
+              description: Indicates all the nodepools on which to enable ingress.
+              items:
+                type: string
+              type: array
+            readyNum:
+              description: Total number of ready pools on which ingress is enabled.
+              format: int32
+              type: integer
+            unreadyNum:
+              description: Total number of unready pools on which ingress is enabling
+                or enable failed.
+              format: int32
+              type: integer
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

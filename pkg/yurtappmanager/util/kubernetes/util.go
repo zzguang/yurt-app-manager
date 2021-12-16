@@ -34,6 +34,42 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreateNamespaceFromYaml creates the Namespace from the yaml template.
+func CreateNamespaceFromYaml(client client.Client, crTmpl string) error {
+	obj, err := YamlToObject([]byte(crTmpl))
+	if err != nil {
+		return err
+	}
+	ns, ok := obj.(*corev1.Namespace)
+	if !ok {
+		return fmt.Errorf("fail to assert namespace")
+	}
+	err = client.Create(context.Background(), ns)
+	if err != nil {
+		return fmt.Errorf("fail to create the namespace/%s: %v", ns.Name, err)
+	}
+	klog.V(4).Infof("namespace/%s is created", ns.Name)
+	return nil
+}
+
+// DeleteNamespaceFromYaml deletes the Namespace from the yaml template.
+func DeleteNamespaceFromYaml(client client.Client, crTmpl string) error {
+	obj, err := YamlToObject([]byte(crTmpl))
+	if err != nil {
+		return err
+	}
+	ns, ok := obj.(*corev1.Namespace)
+	if !ok {
+		return fmt.Errorf("fail to assert namespace")
+	}
+	err = client.Delete(context.Background(), ns)
+	if err != nil {
+		return fmt.Errorf("fail to delete the namespace/%s: %v", ns.Name, err)
+	}
+	klog.V(4).Infof("namespace/%s is deleted", ns.Name)
+	return nil
+}
+
 // CreateClusterRoleFromYaml creates the ClusterRole from the yaml template.
 func CreateClusterRoleFromYaml(client client.Client, crTmpl string) error {
 	obj, err := YamlToObject([]byte(crTmpl))
@@ -70,46 +106,8 @@ func DeleteClusterRoleFromYaml(client client.Client, crTmpl string) error {
 	return nil
 }
 
-// CreateServiceAccountFromYaml creates the ServiceAccount from the yaml template.
-func CreateServiceAccountFromYaml(client client.Client, ns, saTmpl string) error {
-	obj, err := YamlToObject([]byte(saTmpl))
-	if err != nil {
-		return err
-	}
-	sa, ok := obj.(*corev1.ServiceAccount)
-	if !ok {
-		return fmt.Errorf("fail to assert serviceaccount")
-	}
-	sa.Namespace = ns
-	err = client.Create(context.Background(), sa)
-	if err != nil {
-		return fmt.Errorf("fail to create the serviceaccount/%s: %v", sa.Name, err)
-	}
-	klog.V(4).Infof("serviceaccount/%s is created", sa.Name)
-	return nil
-}
-
-// DeleteServiceAccountFromYaml deletes the ServiceAccount from the yaml template.
-func DeleteServiceAccountFromYaml(client client.Client, ns, saTmpl string) error {
-	obj, err := YamlToObject([]byte(saTmpl))
-	if err != nil {
-		return err
-	}
-	sa, ok := obj.(*corev1.ServiceAccount)
-	if !ok {
-		return fmt.Errorf("fail to assert serviceaccount")
-	}
-	sa.Namespace = ns
-	err = client.Delete(context.Background(), sa)
-	if err != nil {
-		return fmt.Errorf("fail to delete the serviceaccount/%s: %v", sa.Name, err)
-	}
-	klog.V(4).Infof("serviceaccount/%s is deleted", sa.Name)
-	return nil
-}
-
 // CreateClusterRoleBindingFromYaml creates the ClusterRoleBinding from the yaml template.
-func CreateClusterRoleBindingFromYaml(client client.Client, name, subject_ns, crbTmpl string) error {
+func CreateClusterRoleBindingFromYaml(client client.Client, crbTmpl string) error {
 	obj, err := YamlToObject([]byte(crbTmpl))
 	if err != nil {
 		return err
@@ -118,8 +116,6 @@ func CreateClusterRoleBindingFromYaml(client client.Client, name, subject_ns, cr
 	if !ok {
 		return fmt.Errorf("fail to assert clusterrolebinding")
 	}
-	crb.Name = name
-	crb.Subjects[0].Namespace = subject_ns
 	err = client.Create(context.Background(), crb)
 	if err != nil {
 		return fmt.Errorf("fail to create the clusterrolebinding/%s: %v", crb.Name, err)
@@ -129,7 +125,7 @@ func CreateClusterRoleBindingFromYaml(client client.Client, name, subject_ns, cr
 }
 
 // DeleteClusterRoleBindingFromYaml deletes the ClusterRoleBinding from the yaml template.
-func DeleteClusterRoleBindingFromYaml(client client.Client, name, subject_ns, crbTmpl string) error {
+func DeleteClusterRoleBindingFromYaml(client client.Client, crbTmpl string) error {
 	obj, err := YamlToObject([]byte(crbTmpl))
 	if err != nil {
 		return err
@@ -138,8 +134,6 @@ func DeleteClusterRoleBindingFromYaml(client client.Client, name, subject_ns, cr
 	if !ok {
 		return fmt.Errorf("fail to assert clusterrolebinding")
 	}
-	crb.Name = name
-	crb.Subjects[0].Namespace = subject_ns
 	err = client.Delete(context.Background(), crb)
 	if err != nil {
 		return fmt.Errorf("fail to delete the clusterrolebinding/%s: %v", crb.Name, err)
@@ -148,8 +142,116 @@ func DeleteClusterRoleBindingFromYaml(client client.Client, name, subject_ns, cr
 	return nil
 }
 
+// CreateRoleFromYaml creates the Role from the yaml template.
+func CreateRoleFromYaml(client client.Client, rTmpl string) error {
+	obj, err := YamlToObject([]byte(rTmpl))
+	if err != nil {
+		return err
+	}
+	r, ok := obj.(*rbacv1.Role)
+	if !ok {
+		return fmt.Errorf("fail to assert role")
+	}
+	err = client.Create(context.Background(), r)
+	if err != nil {
+		return fmt.Errorf("fail to create the role/%s: %v", r.Name, err)
+	}
+	klog.V(4).Infof("role/%s is created", r.Name)
+	return nil
+}
+
+// DeleteRoleFromYaml deletes the Role from the yaml template.
+func DeleteRoleFromYaml(client client.Client, rTmpl string) error {
+	obj, err := YamlToObject([]byte(rTmpl))
+	if err != nil {
+		return err
+	}
+	r, ok := obj.(*rbacv1.Role)
+	if !ok {
+		return fmt.Errorf("fail to assert role")
+	}
+	err = client.Delete(context.Background(), r)
+	if err != nil {
+		return fmt.Errorf("fail to delete the role/%s: %v", r.Name, err)
+	}
+	klog.V(4).Infof("role/%s is deleted", r.Name)
+	return nil
+}
+
+// CreateRoleBindingFromYaml creates the RoleBinding from the yaml template.
+func CreateRoleBindingFromYaml(client client.Client, rbTmpl string) error {
+	obj, err := YamlToObject([]byte(rbTmpl))
+	if err != nil {
+		return err
+	}
+	rb, ok := obj.(*rbacv1.RoleBinding)
+	if !ok {
+		return fmt.Errorf("fail to assert rolebinding")
+	}
+	err = client.Create(context.Background(), rb)
+	if err != nil {
+		return fmt.Errorf("fail to create the rolebinding/%s: %v", rb.Name, err)
+	}
+	klog.V(4).Infof("rolebinding/%s is created", rb.Name)
+	return nil
+}
+
+// DeleteRoleBindingFromYaml delete the RoleBinding from the yaml template.
+func DeleteRoleBindingFromYaml(client client.Client, rbTmpl string) error {
+	obj, err := YamlToObject([]byte(rbTmpl))
+	if err != nil {
+		return err
+	}
+	rb, ok := obj.(*rbacv1.RoleBinding)
+	if !ok {
+		return fmt.Errorf("fail to assert rolebinding")
+	}
+	err = client.Delete(context.Background(), rb)
+	if err != nil {
+		return fmt.Errorf("fail to delete the rolebinding/%s: %v", rb.Name, err)
+	}
+	klog.V(4).Infof("rolebinding/%s is deleted", rb.Name)
+	return nil
+}
+
+// CreateServiceAccountFromYaml creates the ServiceAccount from the yaml template.
+func CreateServiceAccountFromYaml(client client.Client, saTmpl string) error {
+	obj, err := YamlToObject([]byte(saTmpl))
+	if err != nil {
+		return err
+	}
+	sa, ok := obj.(*corev1.ServiceAccount)
+	if !ok {
+		return fmt.Errorf("fail to assert serviceaccount")
+	}
+	err = client.Create(context.Background(), sa)
+	if err != nil {
+		return fmt.Errorf("fail to create the serviceaccount/%s: %v", sa.Name, err)
+	}
+	klog.V(4).Infof("serviceaccount/%s is created", sa.Name)
+	return nil
+}
+
+// DeleteServiceAccountFromYaml deletes the ServiceAccount from the yaml template.
+func DeleteServiceAccountFromYaml(client client.Client, saTmpl string) error {
+	obj, err := YamlToObject([]byte(saTmpl))
+	if err != nil {
+		return err
+	}
+	sa, ok := obj.(*corev1.ServiceAccount)
+	if !ok {
+		return fmt.Errorf("fail to assert serviceaccount")
+	}
+	err = client.Delete(context.Background(), sa)
+	if err != nil {
+		return fmt.Errorf("fail to delete the serviceaccount/%s: %v", sa.Name, err)
+	}
+	klog.V(4).Infof("serviceaccount/%s is deleted", sa.Name)
+	return nil
+}
+
 // CreateConfigMapFromYaml creates the ConfigMap from the yaml template.
-func CreateConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
+func CreateConfigMapFromYaml(client client.Client, cmTmpl string) error {
 	obj, err := YamlToObject([]byte(cmTmpl))
 	if err != nil {
 		return err
@@ -158,7 +260,6 @@ func CreateConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
 	if !ok {
 		return fmt.Errorf("fail to assert configmap")
 	}
-	cm.Namespace = ns
 	err = client.Create(context.Background(), cm)
 	if err != nil {
 		return fmt.Errorf("fail to create the configmap/%s: %v", cm.Name, err)
@@ -168,7 +269,7 @@ func CreateConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
 }
 
 // DeleteConfigMapFromYaml deletes the ConfigMap from the yaml template.
-func DeleteConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
+func DeleteConfigMapFromYaml(client client.Client, cmTmpl string) error {
 	obj, err := YamlToObject([]byte(cmTmpl))
 	if err != nil {
 		return err
@@ -177,7 +278,6 @@ func DeleteConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
 	if !ok {
 		return fmt.Errorf("fail to assert configmap")
 	}
-	cm.Namespace = ns
 	err = client.Delete(context.Background(), cm)
 	if err != nil {
 		return fmt.Errorf("fail to delete the configmap/%s: %v", cm.Name, err)
@@ -187,7 +287,7 @@ func DeleteConfigMapFromYaml(client client.Client, ns, cmTmpl string) error {
 }
 
 // CreateDeployFromYaml creates the Deployment from the yaml template.
-func CreateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *int32, ctx interface{}) error {
+func CreateDeployFromYaml(client client.Client, dplyTmpl string, replicas *int32, ctx interface{}) error {
 	dp, err := SubsituteTemplate(dplyTmpl, ctx)
 	if err != nil {
 		return err
@@ -200,7 +300,6 @@ func CreateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 	if !ok {
 		return fmt.Errorf("fail to assert deployment")
 	}
-	dply.Namespace = ns
 	dply.Spec.Replicas = replicas
 	err = client.Create(context.Background(), dply)
 	if err != nil {
@@ -211,7 +310,7 @@ func CreateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 }
 
 // DeleteDeployFromYaml delete the Deployment from the yaml template.
-func DeleteDeployFromYaml(client client.Client, ns, dplyTmpl string, ctx interface{}) error {
+func DeleteDeployFromYaml(client client.Client, dplyTmpl string, ctx interface{}) error {
 	dp, err := SubsituteTemplate(dplyTmpl, ctx)
 	if err != nil {
 		return err
@@ -224,7 +323,6 @@ func DeleteDeployFromYaml(client client.Client, ns, dplyTmpl string, ctx interfa
 	if !ok {
 		return fmt.Errorf("fail to assert deployment")
 	}
-	dply.Namespace = ns
 	err = client.Delete(context.Background(), dply)
 	if err != nil {
 		return fmt.Errorf("fail to delete the deployment/%s: %v", dply.Name, err)
@@ -234,7 +332,7 @@ func DeleteDeployFromYaml(client client.Client, ns, dplyTmpl string, ctx interfa
 }
 
 // UpdateDeployFromYaml updates the Deployment from the yaml template.
-func UpdateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *int32, ctx interface{}) error {
+func UpdateDeployFromYaml(client client.Client, dplyTmpl string, replicas *int32, ctx interface{}) error {
 	dp, err := SubsituteTemplate(dplyTmpl, ctx)
 	if err != nil {
 		return err
@@ -247,7 +345,6 @@ func UpdateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 	if !ok {
 		return fmt.Errorf("fail to assert deployment")
 	}
-	dply.Namespace = ns
 	dply.Spec.Replicas = replicas
 	err = client.Update(context.Background(), dply)
 	if err != nil {
@@ -258,16 +355,19 @@ func UpdateDeployFromYaml(client client.Client, ns, dplyTmpl string, replicas *i
 }
 
 // CreateServiceFromYaml creates the Service from the yaml template.
-func CreateServiceFromYaml(client client.Client, ns, svcTmpl string) error {
-	obj, err := YamlToObject([]byte(svcTmpl))
+func CreateServiceFromYaml(client client.Client, svcTmpl string, ctx interface{}) error {
+	sv, err := SubsituteTemplate(svcTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	svc, ok := obj.(*corev1.Service)
+	svcObj, err := YamlToObject([]byte(sv))
+	if err != nil {
+		return err
+	}
+	svc, ok := svcObj.(*corev1.Service)
 	if !ok {
 		return fmt.Errorf("fail to assert service")
 	}
-	svc.Namespace = ns
 	err = client.Create(context.Background(), svc)
 	if err != nil {
 		return fmt.Errorf("fail to create the service/%s: %v", svc.Name, err)
@@ -277,16 +377,19 @@ func CreateServiceFromYaml(client client.Client, ns, svcTmpl string) error {
 }
 
 // DeleteServiceFromYaml deletes the Service from the yaml template.
-func DeleteServiceFromYaml(client client.Client, ns, svcTmpl string) error {
-	obj, err := YamlToObject([]byte(svcTmpl))
+func DeleteServiceFromYaml(client client.Client, svcTmpl string, ctx interface{}) error {
+	sv, err := SubsituteTemplate(svcTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	svc, ok := obj.(*corev1.Service)
+	svcObj, err := YamlToObject([]byte(sv))
+	if err != nil {
+		return err
+	}
+	svc, ok := svcObj.(*corev1.Service)
 	if !ok {
 		return fmt.Errorf("fail to assert service")
 	}
-	svc.Namespace = ns
 	err = client.Delete(context.Background(), svc)
 	if err != nil {
 		return fmt.Errorf("fail to delete the service/%s: %v", svc.Name, err)
@@ -295,96 +398,20 @@ func DeleteServiceFromYaml(client client.Client, ns, svcTmpl string) error {
 	return nil
 }
 
-// CreateRoleFromYaml creates the Role from the yaml template.
-func CreateRoleFromYaml(client client.Client, ns, rTmpl string) error {
-	obj, err := YamlToObject([]byte(rTmpl))
-	if err != nil {
-		return err
-	}
-	r, ok := obj.(*rbacv1.Role)
-	if !ok {
-		return fmt.Errorf("fail to assert role")
-	}
-	r.Namespace = ns
-	err = client.Create(context.Background(), r)
-	if err != nil {
-		return fmt.Errorf("fail to create the role/%s: %v", r.Name, err)
-	}
-	klog.V(4).Infof("role/%s is created", r.Name)
-	return nil
-}
-
-// DeleteRoleFromYaml deletes the Role from the yaml template.
-func DeleteRoleFromYaml(client client.Client, ns, rTmpl string) error {
-	obj, err := YamlToObject([]byte(rTmpl))
-	if err != nil {
-		return err
-	}
-	r, ok := obj.(*rbacv1.Role)
-	if !ok {
-		return fmt.Errorf("fail to assert role")
-	}
-	r.Namespace = ns
-	err = client.Delete(context.Background(), r)
-	if err != nil {
-		return fmt.Errorf("fail to delete the role/%s: %v", r.Name, err)
-	}
-	klog.V(4).Infof("role/%s is deleted", r.Name)
-	return nil
-}
-
-// CreateRoleBindingFromYaml creates the RoleBinding from the yaml template.
-func CreateRoleBindingFromYaml(client client.Client, ns, rbTmpl string) error {
-	obj, err := YamlToObject([]byte(rbTmpl))
-	if err != nil {
-		return err
-	}
-	rb, ok := obj.(*rbacv1.RoleBinding)
-	if !ok {
-		return fmt.Errorf("fail to assert rolebinding")
-	}
-	rb.Namespace = ns
-	rb.Subjects[0].Namespace = ns
-	err = client.Create(context.Background(), rb)
-	if err != nil {
-		return fmt.Errorf("fail to create the rolebinding/%s: %v", rb.Name, err)
-	}
-	klog.V(4).Infof("rolebinding/%s is created", rb.Name)
-	return nil
-}
-
-// DeleteRoleBindingFromYaml delete the RoleBinding from the yaml template.
-func DeleteRoleBindingFromYaml(client client.Client, ns, rbTmpl string) error {
-	obj, err := YamlToObject([]byte(rbTmpl))
-	if err != nil {
-		return err
-	}
-	rb, ok := obj.(*rbacv1.RoleBinding)
-	if !ok {
-		return fmt.Errorf("fail to assert rolebinding")
-	}
-	rb.Namespace = ns
-	rb.Subjects[0].Namespace = ns
-	err = client.Delete(context.Background(), rb)
-	if err != nil {
-		return fmt.Errorf("fail to delete the rolebinding/%s: %v", rb.Name, err)
-	}
-	klog.V(4).Infof("rolebinding/%s is deleted", rb.Name)
-	return nil
-}
-
 // CreateValidatingWebhookConfigurationFromYaml creates the validatingwebhookconfiguration from the yaml template.
-func CreateValidatingWebhookConfigurationFromYaml(client client.Client, name, svc_ns, vwcTmpl string) error {
-	obj, err := YamlToObject([]byte(vwcTmpl))
+func CreateValidatingWebhookConfigurationFromYaml(client client.Client, vwcTmpl string, ctx interface{}) error {
+	vw, err := SubsituteTemplate(vwcTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	vwc, ok := obj.(*v1beta1.ValidatingWebhookConfiguration)
+	vwcObj, err := YamlToObject([]byte(vw))
+	if err != nil {
+		return err
+	}
+	vwc, ok := vwcObj.(*v1beta1.ValidatingWebhookConfiguration)
 	if !ok {
 		return fmt.Errorf("fail to assert validatingwebhookconfiguration")
 	}
-	vwc.Name = name
-	vwc.Webhooks[0].ClientConfig.Service.Namespace = svc_ns
 	err = client.Create(context.Background(), vwc)
 	if err != nil {
 		return fmt.Errorf("fail to create the validatingwebhookconfiguration/%s: %v", vwc.Name, err)
@@ -394,17 +421,19 @@ func CreateValidatingWebhookConfigurationFromYaml(client client.Client, name, sv
 }
 
 // DeleteValidatingWebhookConfigurationFromYaml delete the validatingwebhookconfiguration from the yaml template.
-func DeleteValidatingWebhookConfigurationFromYaml(client client.Client, name, svc_ns, vwcTmpl string) error {
-	obj, err := YamlToObject([]byte(vwcTmpl))
+func DeleteValidatingWebhookConfigurationFromYaml(client client.Client, vwcTmpl string, ctx interface{}) error {
+	vw, err := SubsituteTemplate(vwcTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	vwc, ok := obj.(*v1beta1.ValidatingWebhookConfiguration)
+	vwcObj, err := YamlToObject([]byte(vw))
+	if err != nil {
+		return err
+	}
+	vwc, ok := vwcObj.(*v1beta1.ValidatingWebhookConfiguration)
 	if !ok {
 		return fmt.Errorf("fail to assert validatingwebhookconfiguration")
 	}
-	vwc.Name = name
-	vwc.Webhooks[0].ClientConfig.Service.Namespace = svc_ns
 	err = client.Delete(context.Background(), vwc)
 	if err != nil {
 		return fmt.Errorf("fail to delete the validatingwebhookconfiguration/%s: %s", vwc.Name, err)
@@ -414,16 +443,19 @@ func DeleteValidatingWebhookConfigurationFromYaml(client client.Client, name, sv
 }
 
 // CreateJobFromYaml creates the Job from the yaml template.
-func CreateJobFromYaml(client client.Client, ns, jobTmpl string) error {
-	obj, err := YamlToObject([]byte(jobTmpl))
+func CreateJobFromYaml(client client.Client, jobTmpl string, ctx interface{}) error {
+	jb, err := SubsituteTemplate(jobTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	job, ok := obj.(*batchv1.Job)
+	jbObj, err := YamlToObject([]byte(jb))
+	if err != nil {
+		return err
+	}
+	job, ok := jbObj.(*batchv1.Job)
 	if !ok {
 		return fmt.Errorf("fail to assert job")
 	}
-	job.Namespace = ns
 	err = client.Create(context.Background(), job)
 	if err != nil {
 		return fmt.Errorf("fail to create the job/%s: %v", job.Name, err)
@@ -433,44 +465,24 @@ func CreateJobFromYaml(client client.Client, ns, jobTmpl string) error {
 }
 
 // DeleteJobFromYaml deletes the Job from the yaml template.
-func DeleteJobFromYaml(client client.Client, ns, jobTmpl string) error {
-	obj, err := YamlToObject([]byte(jobTmpl))
+func DeleteJobFromYaml(client client.Client, jobTmpl string, ctx interface{}) error {
+	jb, err := SubsituteTemplate(jobTmpl, ctx)
 	if err != nil {
 		return err
 	}
-	job, ok := obj.(*batchv1.Job)
+	jbObj, err := YamlToObject([]byte(jb))
+	if err != nil {
+		return err
+	}
+	job, ok := jbObj.(*batchv1.Job)
 	if !ok {
 		return fmt.Errorf("fail to assert job")
 	}
-	job.Namespace = ns
 	err = client.Delete(context.Background(), job)
 	if err != nil {
 		return fmt.Errorf("fail to delete the job/%s: %v", job.Name, err)
 	}
 	klog.V(4).Infof("job/%s is deleted", job.Name)
-	return nil
-}
-
-// CreateJobPatchFromYaml creates the Job patch from the yaml template.
-func CreateJobPatchFromYaml(client client.Client, ns, jobTmpl string, ctx interface{}) error {
-	jp, err := SubsituteTemplate(jobTmpl, ctx)
-	if err != nil {
-		return err
-	}
-	jpObj, err := YamlToObject([]byte(jp))
-	if err != nil {
-		return err
-	}
-	job, ok := jpObj.(*batchv1.Job)
-	if !ok {
-		return fmt.Errorf("fail to assert job")
-	}
-	job.Namespace = ns
-	err = client.Create(context.Background(), job)
-	if err != nil {
-		return fmt.Errorf("fail to create the job patch/%s: %v", job.Name, err)
-	}
-	klog.V(4).Infof("job patch/%s is created", job.Name)
 	return nil
 }
 

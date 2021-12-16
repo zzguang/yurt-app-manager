@@ -27,23 +27,23 @@ import (
 	webhookutil "github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/webhook/util"
 )
 
-// NodePoolIngressCreateUpdateHandler handles NodePoolIngress
-type NodePoolIngressCreateUpdateHandler struct {
+// YurtIngressCreateUpdateHandler handles YurtIngress
+type YurtIngressCreateUpdateHandler struct {
 	Client client.Client
 
 	// Decoder decodes objects
 	Decoder *admission.Decoder
 }
 
-var _ webhookutil.Handler = &NodePoolIngressCreateUpdateHandler{}
+var _ webhookutil.Handler = &YurtIngressCreateUpdateHandler{}
 
-func (h *NodePoolIngressCreateUpdateHandler) SetOptions(options webhookutil.Options) {
+func (h *YurtIngressCreateUpdateHandler) SetOptions(options webhookutil.Options) {
 	return
 }
 
 // Handle handles admission requests.
-func (h *NodePoolIngressCreateUpdateHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
-	//np_ing := appsv1alpha1.NodePoolIngress{}
+func (h *YurtIngressCreateUpdateHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
+	//np_ing := appsv1alpha1.YurtIngress{}
 
 	switch req.AdmissionRequest.Operation {
 	case admissionv1.Create:
@@ -87,18 +87,18 @@ func (h *NodePoolIngressCreateUpdateHandler) Handle(ctx context.Context, req adm
 	return admission.ValidationResponse(true, "")
 }
 
-var _ admission.DecoderInjector = &NodePoolIngressCreateUpdateHandler{}
+var _ admission.DecoderInjector = &YurtIngressCreateUpdateHandler{}
 
-// InjectDecoder injects the decoder into the NodePoolIngressCreateUpdateHandler
-func (h *NodePoolIngressCreateUpdateHandler) InjectDecoder(d *admission.Decoder) error {
+// InjectDecoder injects the decoder into the YurtIngressCreateUpdateHandler
+func (h *YurtIngressCreateUpdateHandler) InjectDecoder(d *admission.Decoder) error {
 	h.Decoder = d
 	return nil
 }
 
-var _ inject.Client = &NodePoolIngressCreateUpdateHandler{}
+var _ inject.Client = &YurtIngressCreateUpdateHandler{}
 
 // InjectClient injects the client into the PodCreateHandler
-func (h *NodePoolIngressCreateUpdateHandler) InjectClient(c client.Client) error {
+func (h *YurtIngressCreateUpdateHandler) InjectClient(c client.Client) error {
 	h.Client = c
 	return nil
 }

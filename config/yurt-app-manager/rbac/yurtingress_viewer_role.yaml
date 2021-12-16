@@ -1,13 +1,13 @@
-# permissions for end users to view nodepoolingresses.
+# permissions for end users to view yurtingresses.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: nodepoolingress-viewer-role
+  name: yurtingress-viewer-role
 rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses
+  - yurtingresses
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - apps.openyurt.io
   resources:
-  - nodepoolingresses/status
+  - yurtingresses/status
   verbs:
   - get

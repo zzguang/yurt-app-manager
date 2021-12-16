@@ -26,14 +26,14 @@ const (
 	DefaultIngressControllerReplicasPerPool int32 = 1
 	// NginxIngressControllerVersion defines the nginx ingress controller version
 	NginxIngressControllerVersion = "0.48.1"
-	// SingletonNodePoolIngressInstanceName defines the singleton instance name of NodePoolIngress
-	SingletonNodePoolIngressInstanceName = "nodepool-ingress"
-	// NodePoolNameSpacePrefix defines the prefix of the nodepool namespace for nginx ingress
-	NodePoolNameSpacePrefix = "nodepool"
+	// SingletonYurtIngressInstanceName defines the singleton instance name of YurtIngress
+	SingletonYurtIngressInstanceName = "yurtingress-singleton"
+	// YurtIngressFinalizer is used to cleanup ingress resources when singleton YurtIngress CR is deleted
+	YurtIngressFinalizer = "ingress.operator.openyurt.io"
 )
 
-// NodePoolIngressSpec defines the desired state of NodePoolIngress
-type NodePoolIngressSpec struct {
+// YurtIngressSpec defines the desired state of YurtIngress
+type YurtIngressSpec struct {
 	// Indicates the number of the ingress controllers to be deployed under all the specified nodepools.
 	// +optional
 	Replicas int32 `json:"ingress_controller_replicas_per_pool,omitempty"`
@@ -43,8 +43,8 @@ type NodePoolIngressSpec struct {
 	Pools []string `json:"pools,omitempty"`
 }
 
-// NodePoolIngressStatus defines the observed state of NodePoolIngress
-type NodePoolIngressStatus struct {
+// YurtIngressStatus defines the observed state of YurtIngress
+type YurtIngressStatus struct {
 	// Indicates the number of the ingress controllers deployed under all the specified nodepools.
 	// +optional
 	Replicas int32 `json:"ingress_controller_replicas_per_pool,omitempty"`
@@ -59,41 +59,43 @@ type NodePoolIngressStatus struct {
 
 	// Total number of ready pools on which ingress is enabled.
 	// +optional
-	ReadyPoolNum int32 `json:"readyPoolNum"`
+	ReadyNum int32 `json:"readyNum"`
 
 	// Total number of unready pools on which ingress is enabling or enable failed.
 	// +optional
-	UnreadyPoolNum int32 `json:"unreadyPoolNum"`
+	UnreadyNum int32 `json:"unreadyNum"`
 }
 
-// +genclient:nonNamespaced
 // +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:shortName=nping
-// +kubebuilder:printcolumn:name="ReadyPools",type="integer",JSONPath=".status.readyPoolNum",description="The number of pools on which ingress is enabled"
-// +kubebuilder:printcolumn:name="NotReadyPools",type="integer",JSONPath=".status.unreadyPoolNum",description="The number of pools on which ingress is enabling or enable failed"
-// +kubebuilder:printcolumn:name="Replicas-Per-Pool",type="integer",JSONPath=".status.Replicas",description="The ingress controller replicas per pool"
-// +kubebuilder:printcolumn:name="IngressController-Version",type="string",JSONPath=".status.Verson",description="The ingress controller version"
+// +kubebuilder:resource:scope=Cluster,path=yurtingresses,shortName=ying,categories=all
+// +kubebuilder:printcolumn:name="Nginx-Ingress-Version",type="string",JSONPath=".status.nginx_ingress_controller_version",description="The nginx ingress controller version"
+// +kubebuilder:printcolumn:name="Replicas-Per-Pool",type="integer",JSONPath=".status.ingress_controller_replicas_per_pool",description="The nginx ingress controller replicas per pool"
+// +kubebuilder:printcolumn:name="ReadyNum",type="integer",JSONPath=".status.readyNum",description="The number of pools on which ingress is enabled"
+// +kubebuilder:printcolumn:name="NotReadyNum",type="integer",JSONPath=".status.unreadyNum",description="The number of pools on which ingress is enabling or enable failed"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +genclient:nonNamespaced
 
-// NodePoolIngress is the Schema for the nodepoolingresses API
-type NodePoolIngress struct {
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
+// YurtIngress is the Schema for the yurtingresses API
+type YurtIngress struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   NodePoolIngressSpec   `json:"spec,omitempty"`
-	Status NodePoolIngressStatus `json:"status,omitempty"`
+	Spec   YurtIngressSpec   `json:"spec,omitempty"`
+	Status YurtIngressStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// NodePoolIngressList contains a list of NodePoolIngress
-type NodePoolIngressList struct {
+// YurtIngressList contains a list of YurtIngress
+type YurtIngressList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NodePoolIngress `json:"items"`
+	Items           []YurtIngress `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&NodePoolIngress{}, &NodePoolIngressList{})
+	SchemeBuilder.Register(&YurtIngress{}, &YurtIngressList{})
 }

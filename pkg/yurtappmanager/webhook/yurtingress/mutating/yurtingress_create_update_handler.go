@@ -29,21 +29,21 @@ import (
 	webhookutil "github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/webhook/util"
 )
 
-// NodePoolIngressCreateUpdateHandler handles NodePoolIngress
-type NodePoolIngressCreateUpdateHandler struct {
+// YurtIngressCreateUpdateHandler handles YurtIngress
+type YurtIngressCreateUpdateHandler struct {
 	// Decoder decodes objects
 	Decoder *admission.Decoder
 }
 
-var _ webhookutil.Handler = &NodePoolIngressCreateUpdateHandler{}
+var _ webhookutil.Handler = &YurtIngressCreateUpdateHandler{}
 
-func (h *NodePoolIngressCreateUpdateHandler) SetOptions(options webhookutil.Options) {
+func (h *YurtIngressCreateUpdateHandler) SetOptions(options webhookutil.Options) {
 	//return
 }
 
 // Handle handles admission requests.
-func (h *NodePoolIngressCreateUpdateHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
-	np_ing := appsv1alpha1.NodePoolIngress{}
+func (h *YurtIngressCreateUpdateHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
+	np_ing := appsv1alpha1.YurtIngress{}
 	err := h.Decoder.Decode(req, &np_ing)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
@@ -61,14 +61,14 @@ func (h *NodePoolIngressCreateUpdateHandler) Handle(ctx context.Context, req adm
 	resp := admission.PatchResponseFromRaw(req.AdmissionRequest.Object.Raw,
 		marshalled)
 	if len(resp.Patches) > 0 {
-		klog.V(5).Infof("Admit NodePoolIngress %s patches: %v", np_ing.Name, util.DumpJSON(resp.Patches))
+		klog.V(5).Infof("Admit YurtIngress %s patches: %v", np_ing.Name, util.DumpJSON(resp.Patches))
 	}
 	return resp
 }
 
-var _ admission.DecoderInjector = &NodePoolIngressCreateUpdateHandler{}
+var _ admission.DecoderInjector = &YurtIngressCreateUpdateHandler{}
 
-func (h *NodePoolIngressCreateUpdateHandler) InjectDecoder(d *admission.Decoder) error {
+func (h *YurtIngressCreateUpdateHandler) InjectDecoder(d *admission.Decoder) error {
 	h.Decoder = d
 	return nil
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Openyurt Authors.
+Copyright 2021 The OpenYurt Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package webhook
+package validating
 
 import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	appsv1alpha1 "github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/apis/apps/v1alpha1"
-	"github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/util/gate"
-	"github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/webhook/nodepoolingress/mutating"
-	"github.com/openyurtio/yurt-app-manager/pkg/yurtappmanager/webhook/nodepoolingress/validating"
 )
 
-func init() {
-	if !gate.ResourceEnabled(&appsv1alpha1.NodePoolIngress{}) {
-		return
+// validateYurtIngressSpec validates the yurt ingress spec.
+func validateYurtIngressSpec(spec *appsv1alpha1.YurtIngressSpec) field.ErrorList {
+	return nil
+}
+
+// validateYurtIngressSpecUpdate tests if required fields in the YurtIngress spec are set.
+func validateYurtIngressSpecUpdate(spec, oldSpec *appsv1alpha1.YurtIngressSpec) field.ErrorList {
+	if allErrs := validateYurtIngressSpec(spec); allErrs != nil {
+		return allErrs
 	}
-	addHandlers(mutating.HandlerMap)
-	addHandlers(validating.HandlerMap)
+
+	return nil
 }
